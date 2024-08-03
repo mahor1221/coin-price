@@ -1,0 +1,9 @@
+[Unit]
+Description=Get crpto currency prices every hour
+Wants=coin-price.timer
+
+[Service]
+ExecStart=/usr/bin/coin-price
+
+[Install]
+WantedBy=default.target

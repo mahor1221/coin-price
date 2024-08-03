@@ -1,0 +1,27 @@
+[package]
+name = "coin-price"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+const_format = "0.2.32"
+
+tokio = { version = "1.39.2", features = ["fs", "macros", "rt"] }
+reqwest = { version = "0.12.5", features = ["json"] }
+serde_json = "1.0.122"
+
+clap = { version = "4.5.13", features = ["derive", "env"] }
+nix = { version = "0.29.0", features = ["user"] }
+dirs = "5.0.1"
+
+rss = "2.0.8"
+
+[build-dependencies]
+anyhow = "1.0.86"
+vergen = { version = "8.3.1", features = ["cargo", "git", "gitcl", "rustc"] }
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1

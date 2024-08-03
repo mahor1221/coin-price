@@ -1,0 +1,9 @@
+[Unit]
+Description=Update crpto currency prices every hour
+
+[Timer]
+OnCalendar=hourly
+Unit=coin-price.service
+
+[Install]
+WantedBy=timers.target
