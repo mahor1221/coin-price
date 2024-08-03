@@ -35,9 +35,12 @@ cargo target triple: {CARGO_TARGET_TRIPLE}"
 #[derive(Debug, Parser)]
 #[command(about, version = VERSION, long_version = LONG_VERSION)]
 #[command(propagate_version = true)]
-pub struct Args {
+pub struct CliArgs {
     #[arg(long, env, value_name = "KEY")]
-    pub coinmarketcap_api_key: String,
+    pub coinmarketcap_api_key: Option<String>,
+
+    #[arg(long, short, value_name = "PATH", display_order(99))]
+    pub config: Option<PathBuf>,
 
     #[arg(long, value_name = "PATH", display_order(99))]
     pub data_dir: Option<PathBuf>,

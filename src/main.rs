@@ -1,31 +1,23 @@
 mod cli;
+mod config;
 
 use anyhow::{anyhow, Result};
-use clap::Parser;
-use cli::Args;
-use nix::unistd::Uid;
+use config::Config;
 use reqwest::header::ACCEPT;
 use reqwest::Client;
 use rss::{ChannelBuilder, ItemBuilder};
 use serde_json::Value;
-use std::path::{Path, PathBuf};
-use tokio::{
-    fs::{DirBuilder, File},
-    io::AsyncWriteExt,
-};
+use std::path::Path;
+use tokio::{fs::File, io::AsyncWriteExt};
 
 pub const PKG_NAME: &str = env!("CARGO_PKG_NAME");
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
-    let args = Args::parse();
-    let data_dir = data_dir(args.data_dir).await?;
-
-    let price = get_price(&args.coinmarketcap_api_key).await?;
+    let cfg = Config::new().await?;
+    let price = get_price(&cfg.coinmarketcap_api_key).await?;
     let xml = generate_rss(price);
-    save_rss(&xml, &data_dir).await?;
-
-    Ok(())
+    save_rss(&xml, &cfg.data_dir).await
 }
 
 async fn get_price(key: &str) -> Result<f64> {
@@ -58,29 +50,6 @@ fn generate_rss(price: f64) -> String {
         .item(item)
         .build()
         .to_string()
-}
-
-async fn data_dir(arg: Option<PathBuf>) -> Result<PathBuf> {
-    let path = if Uid::effective().is_root() {
-        Ok(PathBuf::from("/var/lib/coin-price"))
-    } else {
-        let default_data_dir = dirs::data_dir().map(|d| d.join(PKG_NAME));
-        arg.map(|p| match p.is_dir() {
-            true => Ok(p),
-            false => Err(anyhow!("given path is not a directory")),
-        })
-        .transpose()?
-        .or(default_data_dir)
-        .ok_or(anyhow!(
-            "unable to find configuration file. Use the -c flag."
-        ))
-    }?;
-
-    DirBuilder::new()
-        .recursive(true)
-        .create(path.join("rss"))
-        .await?;
-    Ok(path)
 }
 
 async fn save_rss(xml: &str, data_dir: &Path) -> Result<()> {
