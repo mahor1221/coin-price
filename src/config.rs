@@ -27,7 +27,6 @@ pub struct Config {
 #[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 struct ConfigFile {
-    data_dir: Option<PathBuf>,
     coinmarketcap_api_key: Option<String>,
 }
 
@@ -57,13 +56,9 @@ impl Config {
 
     fn merge_with_cfg_file(&mut self, cfg_file: ConfigFile) {
         let ConfigFile {
-            data_dir,
             coinmarketcap_api_key,
         } = cfg_file;
 
-        if let Some(t) = data_dir {
-            self.data_dir = t;
-        }
         if let Some(t) = coinmarketcap_api_key {
             self.coinmarketcap_api_key = t;
         }
@@ -77,7 +72,7 @@ impl Config {
         } = cli_args;
 
         self.data_dir = if Uid::effective().is_root() {
-            PathBuf::from("/var/lib/coin-price")
+            PathBuf::from(formatcp!("/var/lib/{PKG_NAME}"))
         } else {
             data_dir
                 .map(|p| match p.is_dir() || p.is_empty() {
@@ -127,13 +122,9 @@ impl ConfigFile {
             let mut buf = String::new();
             File::open(path).await?.read_to_string(&mut buf).await?;
             let Self {
-                data_dir,
                 coinmarketcap_api_key,
             } = toml::from_str(&buf)?;
 
-            if let Some(t) = data_dir {
-                self.data_dir = Some(t);
-            }
             if let Some(t) = coinmarketcap_api_key {
                 self.coinmarketcap_api_key = Some(t);
             }
